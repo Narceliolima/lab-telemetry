@@ -6,20 +6,19 @@ mgmt:
 
 topology:
   nodes:
-  
+
     srlrouter:
       kind: nokia_srlinux
       image: ghcr.io/nokia/srlinux:24.10.1
       type: ixr-d3
       startup-config: router/srlrouter.cfg
-      
-        
+
     srlswitch:
       kind: nokia_srlinux
       image: ghcr.io/nokia/srlinux:24.10.1
       type: ixr-d3
       startup-config: switch/srlswitch.cfg
-                      
+
     # TELEMETRIA STACK
     prometheus:
       kind: linux
@@ -41,15 +40,14 @@ topology:
         - config/grafana/dashboards:/var/lib/grafana/dashboards
       ports:
         - 3000:3000
-      env:        
-        # env vars to enable anonymous access
-        GF_ORG_ROLE: "Admin"
-        GF_ORG_NAME: "Main Org"
+      env:
+        GF_ORG_ROLE: Admin
+        GF_ORG_NAME: Main Org
         GF_AUTH_ANONYMOUS_ENABLED: "true"
         GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
         GF_AUTH_ANONYMOUS: "true"
         GF_AUTH_OAUTH_AUTO_LOGIN: "true"
-    
+
     gNMIc:
       kind: linux
       image: docker.io/esanchezv/hellt-gnmic:latest
@@ -57,52 +55,50 @@ topology:
         - config/python_scapy.sh:/root/python_scapy.sh
         - config/gnmic/gnmic-cpu-stats.yml:/gnmic-cpu-stats.yml:ro
         - config/gnmic/gnmic-stats-metricas.yml:/gnmic-stats-metricas.yml:ro
-      exec: 
+      exec:
         - mkdir /data
         - chmod +x /data
         - chmod +x /root/python_scapy.sh
-        - bash /root/python_scapy.sh   
+        - bash /root/python_scapy.sh
 
     PC2:
       kind: linux
       image: wbitt/network-multitool:alpine-extra
       exec:
-       - ip route del default dev eth0
-             
+        - ip route del default dev eth0
+
     PC3:
       kind: linux
       image: docker.io/esanchezv/kaliipv6v2.2:latest
       exec:
-       - ip route del default dev eth0        
-     
+        - ip route del default dev eth0
+
     PC4:
       kind: linux
       image: docker.io/esanchezv/kaliipv6v2.2:latest
       exec:
-       - ip route del default dev eth0 
+        - ip route del default dev eth0
 
     srvweb:
-       kind: linux
-       image: docker.io/esanchezv/srvhttps:latest
-       binds:
+      kind: linux
+      image: docker.io/esanchezv/srvhttps:latest
+      binds:
         - config/iperf3.sh:/root/iperf3.sh
         - config/web-server.html:/var/www/localhost/htdocs/index.html
-       exec:
+      exec:
         - chmod +x /root/iperf3.sh
-        - bash /root/iperf3.sh   
+        - bash /root/iperf3.sh
         - ip -6 addr add 3fff:1::50/64 dev eth1
-        - ip -6 route add 2001:db8:100::/64 via 3fff:1::1     
-      
+        - ip -6 route add 2001:db8:100::/64 via 3fff:1::1
 
   links:
-    - endpoints: ["srlrouter:e1-1","srlswitch:e1-1"]
-    - endpoints: ["srlrouter:e1-2","srvweb:eth1"]    
-    - endpoints: ["gNMIc:eth1","srlswitch:e1-2"]
+    - endpoints: [ "srlrouter:e1-1", "srlswitch:e1-1" ]
+    - endpoints: [ "srlrouter:e1-2", "srvweb:eth1" ]
+    - endpoints: [ "gNMIc:eth1", "srlswitch:e1-2" ]
       mtu: 1500
-    - endpoints: ["PC2:eth1","srlswitch:e1-3"]
+    - endpoints: [ "PC2:eth1", "srlswitch:e1-3" ]
       mtu: 1500
-    - endpoints: ["PC3:eth1","srlswitch:e1-4"]
+    - endpoints: [ "PC3:eth1", "srlswitch:e1-4" ]
       mtu: 1500
-    - endpoints: ["PC4:eth1","srlswitch:e1-5"]
-      mtu: 1500    
-      
+    - endpoints: [ "PC4:eth1", "srlswitch:e1-5" ]
+      mtu: 1500
